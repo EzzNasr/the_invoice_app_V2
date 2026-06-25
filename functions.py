@@ -89,3 +89,4 @@ def DropTable(table):
     c.execute(f"DROP TABLE IF EXISTS {table}")
     conn.commit()
     print(f"✅ Dropped table {table}.")
+

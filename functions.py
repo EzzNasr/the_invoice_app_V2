@@ -58,12 +58,13 @@ def ViewTable(table):
         print("-" * 70 + "\n")
         
     elif clean_table == "orders":
-        print("-" * 105)
-        print(f"{'Inv #':<6} | {'Cust ID':<8} | {'Date':<20} | {'Subtotal':<10} | {'Discount':<10} | {'Total':<10} | {'Profit':<8} | {'Status':<8}")
-        print("-" * 105)
+        print("-" * 115)
+        print(f"{'Inv #':<6} | {'Cust ID':<8} | {'Date':<20} | {'Subtotal':<10} | {'Discount':<10} | {'Total':<10} | {'Profit':<10} | {'Status':<8}")
+        print("-" * 115)
         for row in c.fetchall():
-            print(f"{str(row[0]):<6} | {str(row[1]):<8} | {str(row[2]):<20} | {str(row[3]):<10} | {str(row[4]):<10} | {str(row[5]):<10} | {str(row[6]):<8} | {str(row[7]):<8}")
-        print("-" * 105 + "\n")
+        # Applying the .2f formatter to force exact decimal precision on all financial columns
+            print(f"{row[0]:<6} | {row[1]:<8} | {str(row[2]):<20} | {float(row[3]):<10.2f} | {float(row[4]):<10.2f} | {float(row[5]):<10.2f} | {float(row[6]):<10.2f} | {str(row[7]):<8}")
+        print("-" * 115 + "\n")
         
     elif clean_table == "orderdetails":
         print("-" * 50)

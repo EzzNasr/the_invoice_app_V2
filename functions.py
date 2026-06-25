@@ -26,10 +26,6 @@ def  ViewDB():
     print(c.fetchall())
 
 def ViewTable(table):
-    import sqlite3
-
-
-def ViewTable(table):
     # path of the DB 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     db_path = os.path.join(script_dir, 'MasterDB.db') 

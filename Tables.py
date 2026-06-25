@@ -1,5 +1,5 @@
 import sqlite3
-import functions 
+import Tablefunctions 
 conn = sqlite3.connect('MasterDB.db')
 c= conn.cursor()
 
@@ -37,11 +37,11 @@ c.execute('''CREATE TABLE IF NOT EXISTS OrderDetails
                FOREIGN KEY (Invoice_Number) REFERENCES Orders(Invoice_Number),
                FOREIGN KEY (Item_ID) REFERENCES Products(Item_ID))''')
 
-functions.ViewDB()
+Tablefunctions.ViewDB()
 
-functions.ViewTable(f"Customers\n\n")
-functions.ViewTable(f"Orders\n\n")
-functions.ViewTable(f"OrderDetails\n\n")
+Tablefunctions.ViewTable(f"Customers\n\n")
+Tablefunctions.ViewTable(f"Orders\n\n")
+Tablefunctions.ViewTable(f"OrderDetails\n\n")
 
 
 conn.commit()

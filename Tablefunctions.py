@@ -1,5 +1,7 @@
 import sqlite3
 import os 
+
+
 def PrintALL(table):
     conn = sqlite3.connect('MasterDB.db')
     c= conn.cursor()

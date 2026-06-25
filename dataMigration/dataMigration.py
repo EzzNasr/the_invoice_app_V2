@@ -150,10 +150,25 @@ def migrate_all_invoices():
             print("  ⚠️ No valid items found in this file. Skipping database insertion.\n")
             continue
 
-        # MATHEMATICS
+        # 5. MATHEMATICS
         subtotal = sum(qty * price for _, qty, price in items)
         discount_amount = subtotal * discount_pct
         final_total = subtotal - discount_amount
+
+        # --- THE PROFIT CALCULATOR (V2) ---
+        # Step 1: Find the true Wholesale Subtotal for this order
+        if detected_tier == 'wholesale':
+            wholesale_subtotal = subtotal
+        else:
+            # We know wholesale is exactly 90% of retail!
+            wholesale_subtotal = subtotal * 0.90
+
+        # Step 2: Calculate your true factory cost
+        # (If profit is 10% of wholesale, then your cost is 90% of wholesale)
+        cost = wholesale_subtotal * 0.90
+
+        # Step 3: Profit is just what the customer actually paid minus your cost!
+        profit = final_total - cost
 
         # DATABASE INSERTS
         cursor.execute("SELECT cx_ID FROM Customers WHERE Name = ?", (customer_name,))
@@ -165,12 +180,14 @@ def migrate_all_invoices():
             cursor.execute("INSERT INTO Customers (Name, Default_Tier) VALUES (?, ?)", (customer_name, detected_tier))
             cust_id = cursor.lastrowid
 
+        # Insert Order Header (Now injecting the real Profit variable!)
         cursor.execute('''
             INSERT INTO Orders (Customer_ID, Date, Subtotal, Discount, Total, Profit, Status)
-            VALUES (?, ?, ?, ?, ?, 0, 'active')
-        ''', (cust_id, order_date, subtotal, discount_amount, final_total))
+            VALUES (?, ?, ?, ?, ?, ?, 'active')
+        ''', (cust_id, order_date, subtotal, discount_amount, final_total, profit))
         order_id = cursor.lastrowid
 
+        # Insert the Line Items
         for prod_id, qty, price in items:
             cursor.execute('''
                 INSERT INTO OrderDetails (Invoice_Number, Item_ID, Quantity, Price_Sold)

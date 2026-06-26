@@ -199,16 +199,20 @@ def Phase1_Process1():
         final_id, final_name, final_tier = Current_Tier(cx_id, cx_name, cx_tier)
         return (final_id, final_name, final_tier)
 
+
 def Validate_Products(product_ids):
     if not product_ids:
         return []
 
     placeholders = ','.join('?' * len(product_ids))
-    query = f"SELECT id, name FROM Products WHERE id IN ({placeholders})"
+    
+    # getting everything we need for later phases
+    query = f"SELECT id, name, RetailPrice, WholesalePrice FROM Products WHERE id IN ({placeholders})"
     
     c.execute(query, tuple(product_ids))
     found_products = c.fetchall()
     
+    # saving IDs in a list
     found_ids = [row[0] for row in found_products]
     
     for p_id in product_ids:
@@ -216,18 +220,19 @@ def Validate_Products(product_ids):
             print(f"Error: Product ID {p_id} does not exist in the database.")
             return False 
             
+    # found product came from C.fetchall so it has everything included
     return found_products
 
+
 def Get_Product_IDs(): 
-    print(f"\nEnter product IDs one by one. \n Type '-1' to exit.")
+    print(f"\nEnter product IDs one by one. \nType '-1' to exit.")
     product_ids = []
     
-    # A loop for gathering the input
     while True:
         raw = input("> ").strip()
         
         if raw == '-1':
-            break # Exit the input loop
+            break 
             
         if not raw.isdigit():
             print("Invalid input. Please enter a numeric ID.")
@@ -235,50 +240,148 @@ def Get_Product_IDs():
             
         product_ids.append(int(raw))
         
-    # Return the list, or False if they exited without typing anything
     return product_ids if product_ids else False
 
 
 def Phase2_Process1():
-    # 1. Get the customer state
     customer_id, Name, Tier = Phase1_Process1()
     
-    # 2. Master Loop: Keep asking until we get a fully valid cart
     while True: 
-       
         raw_user_input_ids = Get_Product_IDs() 
         
-        # If they typed (nothing or garbage) False restart the master loop
         if not raw_user_input_ids:
             print("No valid items entered. Let's try again.")
             continue 
 
-        # 3. Validate everything in ONE trip to the database
+        
         valid_products = Validate_Products(raw_user_input_ids)
         
         if not valid_products:
-            print("Validation failed invalid IDs where entered. Please re-enter your list.")
-            
-            # Loop restarts 
-       
+            print("Validation failed. Invalid IDs were entered. Please re-enter your list.")
         else:
-            # Everything passed , break out of the master loop.
             print(f"\nSuccess! Ready to process: {valid_products}")
+            # passing on the 4 needed 
+            return customer_id, Name, Tier, valid_products  
 
-            return Phase1_Process1(),  valid_products   # to phase 3 
+
+def Bulk_system(valid_products, tier):
+    while True:
+        raw_qty = input("Enter the bulk quantity for ALL items: ").strip()
+        if raw_qty.isdigit() and int(raw_qty) > 0:
+            bulk_qty = int(raw_qty)
+            break
+        print("Invalid input. Please enter a positive whole number.")
+
+    final_order_details = []
+
+    for prod in valid_products:
+        #prices are included in the tuple
+        p_id = prod[0]
+        p_retail = prod[2]
+        p_wholesale = prod[3]
+
+        active_price = p_wholesale if tier.strip().lower() == "wholesale" else p_retail
+        final_line_price = active_price * bulk_qty
+
+        final_order_details.append((p_id, bulk_qty, final_line_price))
+
+    return final_order_details
+
+
+def Individual_system(valid_products, tier):
+    final_order_details = []
+    
+    print(f"\nLet's set the quantities for each item.")
+    
+    for prod in valid_products:
+        # Unpack the tuple provided by Phase 2
+        p_id = prod[0]
+        p_name = prod[1]
+        p_retail = prod[2]
+        p_wholesale = prod[3]
+        
+        # Pick the price based on the tier
+        active_price = p_wholesale if tier.strip().lower() == "wholesale" else p_retail
+        
+        # Trap the user until they give a valid quantity for THIS specific item
+        while True:
+            # Added the name and price to the prompt so the user has context
+            raw_qty = input(f"Enter quantity for '{p_name}' (ID: {p_id}) @ ${active_price:.2f}: ").strip()
+            
+            if raw_qty.isdigit() and int(raw_qty) > 0:
+                item_qty = int(raw_qty)
+                break
+                
+            print("Invalid input. Please enter a positive whole number.")
+            
+        # Calculate the final total for this specific item
+        final_line_price = active_price * item_qty
+        
+        # Package it up and add it to our final cart
+        final_order_details.append((p_id, item_qty, final_line_price))
+        
+    return final_order_details
+
+
+def Quantity_System(valid_products, tier):
+    while True:
+        choice = input("\nPress 1 for Bulk Quantity or 2 for Individual Quantity: ").strip()
+
+        if choice == '1':
+            print("\n--- Bulk Quantity Mode ---")
+            return Bulk_system(valid_products, tier)
+            
+        elif choice == '2':
+            print("\n--- Individual Quantity Mode ---")
+            return Individual_system(valid_products, tier)
+            
+        else:
+            print("Invalid choice. Please literally just press 1 or 2.")
+
+
+def Phase3_Process1():
+    
+    customer_id, Name, tier, valid_products = Phase2_Process1()
+    # contains Product ID , Bulk Quantity , and line price all in a tuple for each item 
+    final_cart = Quantity_System(valid_products, tier)
+    
+    print(f"\nPhase 3 Done. Going into discount and Totals.")
+    print(final_cart)
+    return final_cart
+    
+
+def Calculate_Subtotal(final_cart):
+    # This extracts index 2 from every item and sums them instantly
+    subtotal = sum(item[2] for item in final_cart)
+    
+    return subtotal
+
+def Apply_discount():
+
+
+
+def Phase4_Process1():
+
+    # 1. get the cart from Phase 3 ( P_ID, quantity , line price)
+    final_cart = Phase3_Process1()
+    
+    # 2. Calculate the base subtotal
+
+    subtotal = Calculate_Subtotal(final_cart)
+    
+    print(f"Subtotal: {subtotal}")
+    
     
 
 
-
-    
 
 def calculate_profit():
     # profit is total - cost price     
     print()
 
-
 def Process1():
-    cx_id, cx_name, cx_tier = Process1()
+    #place Holder
+    print()
 
 
 def bill_type():

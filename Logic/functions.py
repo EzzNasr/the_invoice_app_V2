@@ -76,10 +76,6 @@ def Current_Tier(cx_id, cx_name, default_tier):
                 continue
             return result
     
-def update_DB():
-    # This function is a placeholder for future database update logic
-    print()
-
 
 def get_customer_list():
     # GUI-READY LOGIC (new): pure DB read, no I/O.
@@ -87,6 +83,25 @@ def get_customer_list():
     # is what a GUI would call to populate a dropdown/table widget.
     c.execute("SELECT * FROM Customers")
     return [(row[0], row[1]) for row in c.fetchall()]
+
+
+def get_customer_by_id(customer_id):
+    # GUI-READY LOGIC (new): pure DB lookup, no I/O.
+    # Returns (customer_id, name, tier) if found, otherwise None - a GUI can
+    # call this directly off a dropdown selection instead of an input() loop.
+    c.execute("SELECT Name, Default_Tier FROM Customers WHERE customer_id = ?", (customer_id,))
+    result = c.fetchone()
+    if result:
+        return (customer_id, result[0], result[1])
+    return None
+
+
+def find_customer_by_name(name):
+    # GUI-READY LOGIC (new): pure DB lookup, no I/O.
+    # Returns the matching row (or None) for a customer with this name.
+    #changed cx_ID to customer_id to match the table structure 
+    c.execute("SELECT customer_id , Name FROM Customers WHERE Name = ?", (name,))
+    return c.fetchone()
 
 
 def present_CX_List():
@@ -100,16 +115,6 @@ def present_CX_List():
         print(f"{customer_id:<5} | {name:<20} ")
     print("-" * 70 + "\n")
     return len(customers)
-
-def get_customer_by_id(customer_id):
-    # GUI-READY LOGIC (new): pure DB lookup, no I/O.
-    # Returns (customer_id, name, tier) if found, otherwise None - a GUI can
-    # call this directly off a dropdown selection instead of an input() loop.
-    c.execute("SELECT Name, Default_Tier FROM Customers WHERE customer_id = ?", (customer_id,))
-    result = c.fetchone()
-    if result:
-        return (customer_id, result[0], result[1])
-    return None
 
 
 def handle_existing_customer():
@@ -137,13 +142,6 @@ def handle_existing_customer():
         except ValueError:
             print(" Please enter a valid number.\n")
 
-def find_customer_by_name(name):
-    # GUI-READY LOGIC (new): pure DB lookup, no I/O.
-    # Returns the matching row (or None) for a customer with this name.
-    #changed cx_ID to customer_id to match the table structure 
-    c.execute("SELECT customer_id , Name FROM Customers WHERE Name = ?", (name,))
-    return c.fetchone()
-
 
 def handle_new_customer():
     # GUI-READY REFACTOR: same prompts/prints/return values as before,
@@ -170,6 +168,7 @@ def handle_new_customer():
         else:
             print(f"✅ Proceeding with New Customer: {new_name}")
             return (0, new_name, None)
+
 
 def Phase1_Process1():
     # GUI-READY NOTE (no code change here): this function's only "logic"
@@ -200,13 +199,87 @@ def Phase1_Process1():
         final_id, final_name, final_tier = Current_Tier(cx_id, cx_name, cx_tier)
         return (final_id, final_name, final_tier)
 
-def Process1():
-    cx_id, cx_name, cx_tier = Process1()
+def Validate_Products(product_ids):
+    if not product_ids:
+        return []
 
+    placeholders = ','.join('?' * len(product_ids))
+    query = f"SELECT id, name FROM Products WHERE id IN ({placeholders})"
+    
+    c.execute(query, tuple(product_ids))
+    found_products = c.fetchall()
+    
+    found_ids = [row[0] for row in found_products]
+    
+    for p_id in product_ids:
+        if p_id not in found_ids:
+            print(f"Error: Product ID {p_id} does not exist in the database.")
+            return False 
+            
+    return found_products
+
+def Get_Product_IDs(): 
+    print(f"\nEnter product IDs one by one. \n Type '-1' to exit.")
+    product_ids = []
+    
+    # A loop for gathering the input
+    while True:
+        raw = input("> ").strip()
+        
+        if raw == '-1':
+            break # Exit the input loop
+            
+        if not raw.isdigit():
+            print("Invalid input. Please enter a numeric ID.")
+            continue
+            
+        product_ids.append(int(raw))
+        
+    # Return the list, or False if they exited without typing anything
+    return product_ids if product_ids else False
+
+
+def Phase2_Process1():
+    # 1. Get the customer state
+    customer_id, Name, Tier = Phase1_Process1()
+    
+    # 2. Master Loop: Keep asking until we get a fully valid cart
+    while True: 
+       
+        raw_user_input_ids = Get_Product_IDs() 
+        
+        # If they typed (nothing or garbage) False restart the master loop
+        if not raw_user_input_ids:
+            print("No valid items entered. Let's try again.")
+            continue 
+
+        # 3. Validate everything in ONE trip to the database
+        valid_products = Validate_Products(raw_user_input_ids)
+        
+        if not valid_products:
+            print("Validation failed invalid IDs where entered. Please re-enter your list.")
+            
+            # Loop restarts 
+       
+        else:
+            # Everything passed , break out of the master loop.
+            print(f"\nSuccess! Ready to process: {valid_products}")
+
+            return Phase1_Process1(),  valid_products   # to phase 3 
+    
+
+
+
+    
 
 def calculate_profit():
     # profit is total - cost price     
     print()
+
+
+def Process1():
+    cx_id, cx_name, cx_tier = Process1()
+
 
 def bill_type():
     #still not implemented, but this function will handle the bill type selection and routing to the appropriate processing pipeline
@@ -251,3 +324,6 @@ def bill_type():
         bill_type()
 
 
+def update_DB():
+    # This function is a placeholder for future database update logic
+    print()

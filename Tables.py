@@ -6,12 +6,12 @@ c= conn.cursor()
 
 # Tables for the database :
 #  1) "Products" which contains the Item ID, description, office price, and retail price
-#  2) "Customers" which contains the cx_iD ,Name , Phone number, and default Tier (ie wholsale or retail)
+#  2) "Customers" which contains the customer_id ,Name , Phone number, and default Tier (ie wholsale or retail)
 #  3) "Orders" which is the overall layout of the bill Invoice Number , , Customer ID( linking to the Customers table), Date, and subtotal , discount, and total, profit , status ( active = ok , canceled = canceled)
 #  4) "OrderDetails" which is the details of the order, linking to the Orders table via the Invoice Number, and linking to the Products table via the Item ID, and containing the quantity ordered, and the price sold 
 
 c.execute('''CREATE TABLE IF NOT EXISTS Customers
-              (cx_ID INTEGER PRIMARY KEY,
+              (customer_id INTEGER PRIMARY KEY,
                Name TEXT NOT NULL,
                Phone_Number TEXT ,
                Default_Tier TEXT )''')

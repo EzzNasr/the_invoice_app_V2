@@ -10,12 +10,21 @@ c= conn.cursor()
 #  3) "Orders" which is the overall layout of the bill Invoice Number , , Customer ID( linking to the Customers table), Date, and subtotal , discount, and total, profit , status ( active = ok , canceled = canceled)
 #  4) "OrderDetails" which is the details of the order, linking to the Orders table via the Invoice Number, and linking to the Products table via the Item ID, and containing the quantity ordered, and the price sold 
 
+c.execute('''CREATE TABLE IF NOT EXISTS Products (
+    Product_ID INTEGER PRIMARY KEY,
+    item_name TEXT,
+    description TEXT,
+    Retail_Price REAL,
+    Wholesale_Price REAL,
+    stock_quantity INTEGER,
+    Cost REAL DEFAULT 0.0
+)''')
+
 c.execute('''CREATE TABLE IF NOT EXISTS Customers
               (customer_id INTEGER PRIMARY KEY,
                Name TEXT NOT NULL,
                Phone_Number TEXT ,
                Default_Tier TEXT )''')
-
 
 
 c.execute('''CREATE TABLE IF NOT EXISTS Orders
@@ -37,11 +46,15 @@ c.execute('''CREATE TABLE IF NOT EXISTS OrderDetails
                FOREIGN KEY (Invoice_Number) REFERENCES Orders(Invoice_Number),
                FOREIGN KEY (Item_ID) REFERENCES Products(Item_ID))''')
 
+
+
 Tablefunctions.ViewDB()
 
+Tablefunctions.ViewTable(f"Products")
 Tablefunctions.ViewTable(f"Customers\n\n")
 Tablefunctions.ViewTable(f"Orders\n\n")
 Tablefunctions.ViewTable(f"OrderDetails\n\n")
+
 
 
 conn.commit()

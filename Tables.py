@@ -36,7 +36,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS Orders
                Total REAL NOT NULL,
                Profit REAL NOT NULL,
                Status TEXT NOT NULL,
-               FOREIGN KEY (Customer_ID) REFERENCES Customers(cx_ID))''')
+               FOREIGN KEY (Customer_ID) REFERENCES Customers(customer_id))''')
 
 c.execute('''CREATE TABLE IF NOT EXISTS OrderDetails
               (Invoice_Number INTEGER NOT NULL,
@@ -44,7 +44,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS OrderDetails
                Quantity INTEGER NOT NULL,
                Price_Sold REAL NOT NULL,
                FOREIGN KEY (Invoice_Number) REFERENCES Orders(Invoice_Number),
-               FOREIGN KEY (Item_ID) REFERENCES Products(Item_ID))''')
+               FOREIGN KEY (Item_ID) REFERENCES Products(Product_ID))''')
 
 
 

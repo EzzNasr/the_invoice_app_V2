@@ -3,9 +3,47 @@ import sqlite3
 conn = sqlite3.connect('MasterDB.db')
 c = conn.cursor()
 
-def Current_Tier(id,name,Default_tier):
-    # This function is used to change the default tier of the customer if needed
-    print(f"Current Default Tier for {name} is {Default_tier}")
+def Current_Tier(cx_id, cx_name, default_tier):
+    # This function safely traps the user until they give a valid tier choice
+    
+    if cx_id != 0:
+        current_tier = default_tier.strip().lower()
+        while True:
+            x = input(f"""
+                Selected Customer: {cx_name} (ID: {cx_id}) | Default Tier: {current_tier}
+                Would you like to keep default price tier or change it?
+                1) Keep Default
+                2) Change Price Tier 
+                : """).strip()
+            
+            if x == "1":
+                print(f" Keeping Default Price Tier = {current_tier}")
+                break
+            elif x == "2":
+                
+                current_tier = "wholesale" if current_tier == "retail" else "retail"
+                print(f" Changed tier during this bill generation to {current_tier}")
+                break
+            else:
+                print(" Invalid choice. Please enter 1 or 2.")
+                
+        return (cx_id, cx_name, current_tier) 
+        
+    elif cx_id == 0:
+        # If id = 0, it means it's a completely new customer
+        print(f" New customer name is: {cx_name}")
+        while True:
+            x = input(f"What do you want to use for the current tier for this customer?\n1) retail\n2) wholesale\n: ").strip()
+            if x == "1":
+                current_tier = "retail"
+                break
+            elif x == "2":
+                current_tier = "wholesale"
+                break
+            else:
+                print(" Invalid choice. Please enter 1 or 2.")
+                
+        return (cx_id, cx_name, current_tier)
     
     
     
@@ -73,55 +111,27 @@ def handle_new_customer():
             print(f"✅ Proceeding with New Customer: {new_name}")
             return (0, new_name, unknown)
 
-def Process1():
-    # The Main Router
+def Phase1_Process1():
+    # this is the first part of the process1, handeling the customer classification ( existing or new ) and tier confirmation (Default or change)
     while True:
-        choice = input(f"Choose 1 for existing customer \nChoose 2 for new customer\n: ").strip()
+        choice = input("Choose 1 for existing customer \nChoose 2 for new customer\n: ").strip()
+        
         if choice == '1':
-            selected_id, selected_name, tier = handle_existing_customer()
-            current_tier = tier.strip().lower()
+
+            cx_id, cx_name, cx_tier = handle_existing_customer() 
             
-             
-            x = input(f"""
-                        Selected Customer ID = {selected_id} and Price Tier = {tier}.
-                        would you like to keep default price tier or change it? \n
-                        1) Keep Default \n
-                        2) Change Price Tier 
-                        : """).strip()
-            if x == "1":
-                print(f"✅ Keeping Default Price Tier = {tier}")
-
-            elif x == "2":
-                if current_tier == "retail":
-                    current_tier = "wholesale"
-                else:
-                    current_tier = "retail"
-                print(f"changd tier during this bill generation to {current_tier}")
-            
-            return (selected_id, selected_name, current_tier)    
-
-
         elif choice == '2':
+            #Whether truly new or not same treatement, if id =0 this is my flag
+            cx_id, cx_name, cx_tier = handle_new_customer()
             
-            id,name,tier = handle_new_customer()
-            
-            if id == 0:
-                # If id = 0, it means it's a new customer
-                print(f"new customer name is : {name}")
-                x = input(f"what do you want to use for the current tier for this customer? \n(1) retail or (2) wholesale) \n: ")
-                if x == "1":
-                    tier = "retail"
-                elif x == "2":
-                    tier = "wholesale"
-            else:
-                
-                #if id != 0, it means the customer already exists, and current id and tier are true
-                
-                #do something with the existing customer name
-                
-                break
         else:
-            print(f" '{choice}' is an invalid choice. Let's try that again.\n")
+            print(f"⚠️ '{choice}' is an invalid choice. Let's try that again.\n")
+            continue # gets back to the top of the loop for a new choice
+
+        #whether new or existing, we now have the customer name and ID, we can now check if they want to change the tier
+        final_id, final_name, final_tier = Current_Tier(cx_id, cx_name, cx_tier)
+        return (final_id, final_name, final_tier)
+        
 
 def calculate_profit():
     # profit is total - cost price     

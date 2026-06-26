@@ -1,5 +1,6 @@
 import sqlite3
 import os 
+from tabulate import tabulate
 
 
 def PrintALL(table):
@@ -47,7 +48,26 @@ def ViewTable(table):
         return
 
     # Now we compare against our sanitized, lowercase string!
-    if clean_table == "customers":
+    if clean_table == "products":
+        headers = ["Prod ID", "Item Name", "Description", "Retail Price", "Wholesale", "Stock", "Cost"]
+        
+        # Process and format the rows
+        table_data = []
+        for row in c.fetchall():
+            table_data.append([
+                row[0], 
+                row[1], 
+                row[2], 
+                f"{float(row[3]):.2f}",  # Retail Price
+                f"{float(row[4]):.2f}",  # Wholesale
+                row[5],                  # Stock
+                f"{float(row[6]):.2f}"   # Cost
+            ])
+        
+        print(tabulate(table_data, headers=headers, tablefmt="grid", stralign="right"))
+        print("\n")
+
+    elif clean_table == "customers":
         print("-" * 70)
         print(f"{'ID':<5} | {'Name':<20} | {'Phone Number':<15} | {'Default Tier':<15}")
         print("-" * 70)

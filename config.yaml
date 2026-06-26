@@ -1,0 +1,4 @@
+# config.yaml
+tax_settings:
+  apply_tax: true
+  tax_rate: 0.14  # Example: 14% standard rate

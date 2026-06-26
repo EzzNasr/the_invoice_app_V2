@@ -1,4 +1,5 @@
-import sqlite3 
+import sqlite3
+import yaml 
 conn = sqlite3.connect('MasterDB.db')
 c = conn.cursor()
 
@@ -207,7 +208,8 @@ def Validate_Products(product_ids):
     placeholders = ','.join('?' * len(product_ids))
     
     # getting everything we need for later phases
-    query = f"SELECT id, name, RetailPrice, WholesalePrice FROM Products WHERE id IN ({placeholders})"
+    query = f"SELECT Product_ID, item_name, Retail_Price, Wholesale_Price, Cost FROM Products WHERE Product_ID IN ({placeholders})"
+
     
     c.execute(query, tuple(product_ids))
     found_products = c.fetchall()
@@ -277,13 +279,18 @@ def Bulk_system(valid_products, tier):
     for prod in valid_products:
         #prices are included in the tuple
         p_id = prod[0]
+        p_name=prod[1]
         p_retail = prod[2]
         p_wholesale = prod[3]
+        p_cost = prod[4]
 
         active_price = p_wholesale if tier.strip().lower() == "wholesale" else p_retail
+
+        total_line_cost = p_cost * bulk_qty
         final_line_price = active_price * bulk_qty
 
-        final_order_details.append((p_id, bulk_qty, final_line_price))
+        final_order_details.append((p_id, bulk_qty, total_line_cost ,final_line_price, p_name))
+        # contains Product ID  ,Quantity , line COST ,   line price all  , Item name in a tuple for each item 
 
     return final_order_details
 
@@ -299,6 +306,7 @@ def Individual_system(valid_products, tier):
         p_name = prod[1]
         p_retail = prod[2]
         p_wholesale = prod[3]
+        p_cost = prod[4]
         
         # Pick the price based on the tier
         active_price = p_wholesale if tier.strip().lower() == "wholesale" else p_retail
@@ -306,7 +314,7 @@ def Individual_system(valid_products, tier):
         # Trap the user until they give a valid quantity for THIS specific item
         while True:
             # Added the name and price to the prompt so the user has context
-            raw_qty = input(f"Enter quantity for '{p_name}' (ID: {p_id}) @ ${active_price:.2f}: ").strip()
+            raw_qty = input(f"Enter quantity for '{p_name}' (ID: {p_id}) @ EGP {active_price:.2f}: ").strip()
             
             if raw_qty.isdigit() and int(raw_qty) > 0:
                 item_qty = int(raw_qty)
@@ -316,10 +324,10 @@ def Individual_system(valid_products, tier):
             
         # Calculate the final total for this specific item
         final_line_price = active_price * item_qty
-        
+        total_line_cost = p_cost * item_qty
         # Package it up and add it to our final cart
-        final_order_details.append((p_id, item_qty, final_line_price))
-        
+        final_order_details.append((p_id,item_qty, total_line_cost, final_line_price, p_name ,))
+        # contains Product ID  ,Quantity , line COST ,   line price all  , Item name in a tuple for each item 
     return final_order_details
 
 
@@ -340,9 +348,9 @@ def Quantity_System(valid_products, tier):
 
 
 def Phase3_Process1():
-    
+    # valid_products = # contains Product ID , Item name ,Quantity , line COST and  line price all in a tuple for each item 
     customer_id, Name, tier, valid_products = Phase2_Process1()
-    # contains Product ID , Bulk Quantity , and line price all in a tuple for each item 
+
     final_cart = Quantity_System(valid_products, tier)
     
     print(f"\nPhase 3 Done. Going into discount and Totals.")
@@ -351,33 +359,165 @@ def Phase3_Process1():
     
 
 def Calculate_Subtotal(final_cart):
-    # This extracts index 2 from every item and sums them instantly
-    subtotal = sum(item[2] for item in final_cart)
+        # contains Product ID  ,Quantity , line COST ,   line price all  , Item name in a tuple for each item 
+
+    # This extracts index 3 from every item and sums them instantly
+    subtotal = sum(item[3] for item in final_cart)
     
     return subtotal
 
-def Apply_discount():
+
+def Apply_Discount(subtotal):
+    """
+    GUI Prototype: Traps the user until a valid flat or % discount is applied.
+    Returns: (new_total, discount_amount)
+    """
+    print(f"\n--- Discount Phase ---")
+    print(f"Current Subtotal: ${subtotal:.2f}")
+    
+    while True:
+        raw_disc = input("Enter discount (e.g., '10%' for percentage, '50' for flat amount, or '0' to skip): ").strip()
+        
+        # Base Case: No discount
+        if not raw_disc or raw_disc == '0':
+            return subtotal, 0.0
+            
+        # Case A: Percentage-based discount
+        if raw_disc.endswith('%'):
+            try:
+                perc = float(raw_disc[:-1]) # Strip the '%' sign and convert
+                if 0 <= perc <= 100:
+                    discount_amt = subtotal * (perc / 100)
+                    return subtotal - discount_amt, discount_amt
+            except ValueError:
+                pass # Falls through to the error print at the bottom
+                
+        # Case B: Flat amount discount
+        else:
+            try:
+                flat = float(raw_disc)
+                if 0 <= flat <= subtotal:
+                    return subtotal - flat, flat
+                elif flat > subtotal:
+                    print("Error: Discount cannot be greater than the subtotal")
+                    continue
+            except ValueError:
+                pass
+                
+        print("Invalid input. Please enter a valid number (e.g., 20) or percentage (e.g., 15%).")
+
+
+def Apply_Taxes(current_total):
+    """
+    Reads config.yaml. If apply_tax is true, applies the rate.
+    Returns: (final_total, tax_amount, tax_rate_used)
+    """
+    try:
+        with open('config.yaml', 'r') as file:
+            config = yaml.safe_load(file)
+            
+        # Safely drill into the dictionary, defaulting to safe values if keys are missing
+        tax_info = config.get('tax_settings', {})
+        apply_tax = tax_info.get('apply_tax', False)
+        tax_rate = tax_info.get('tax_rate', 0.0)
+        
+        if apply_tax and tax_rate > 0:
+            tax_amount = current_total * tax_rate
+            final_total = current_total + tax_amount
+            return final_total, tax_amount, tax_rate
+        else:
+            # Taxes are explicitly turned off in YAML, or rate is 0
+            return current_total, 0.0, 0.0
+            
+    # GUI/App fail-safes: Never crash the app just because a config file is missing
+    except FileNotFoundError:
+        print("\n[System Warning] config.yaml not found. Proceeding with 0% tax.")
+        return current_total, 0.0, 0.0
+    except yaml.YAMLError:
+        print("\n[System Warning] config.yaml is corrupted/invalid. Proceeding with 0% tax.")
+        return current_total, 0.0, 0.0
+
+
+
+def Calculate_Profit(final_cart, subtotal, discount_amount):
+    # Sum up the total line costs Index 2
+    total_order_cost = sum(item[2] for item in final_cart)
+    
+    # revenue 
+    actual_revenue = subtotal - discount_amount
+    
+    # profit
+    final_profit = actual_revenue - total_order_cost
+    
+    return final_profit, total_order_cost
+
+
+def Package_Invoice_Data(cx_name, tier, final_cart, subtotal, discount_amount, tax_amount, grand_total, profit):
+    """
+    Transforms the raw checkout data into GUI-ready string formats.
+    Returns a dictionary that the front-end can easily bind to visual elements.
+    """
+    
+    # 1. Format the cart for a GUI Table Widget
+    gui_table_data = []
+    for item in final_cart:
+        p_id, qty, line_cost, line_total , p_name = item
+        unit_price = line_total / qty 
+        
+        # Package exactly what the GUI table needs to show, fully formatted
+        gui_table_data.append(
+            [str(p_id), str(qty), f"${unit_price:.2f}", f"${line_total:.2f}", p_name]
+        )
+        
+    # 2. Package all the summary text elements
+    invoice_packet = {
+        "header": {
+            "customer_name": cx_name,
+            "tier": tier.capitalize(),
+        },
+        "table_data": gui_table_data, # Ready to plug directly into your GUI table element!
+        "financials": {
+            "subtotal": f"${subtotal:.2f}",
+            "discount": f"-${discount_amount:.2f}",
+            "tax": f"+${tax_amount:.2f}",
+            "grand_total": f"${grand_total:.2f}",
+        },
+        "system_metrics": {
+            "internal_profit": f"${profit:.2f}" # Keep this heavily guarded in your GUI!
+        }
+    }
+    
+    return invoice_packet
+
+
+def invoice_Generation():
+    #place Holder
+    print()
 
 
 
 def Phase4_Process1():
-
-    # 1. get the cart from Phase 3 ( P_ID, quantity , line price)
-    final_cart = Phase3_Process1()
+    # 1. Grab the cart from Phase 3
+    final_cart = Phase3_Process1()  
     
-    # 2. Calculate the base subtotal
-
+    # 2. Get Base Subtotal
     subtotal = Calculate_Subtotal(final_cart)
     
-    print(f"Subtotal: {subtotal}")
+    # 3. Apply Discounts
+    discounted_total, discount_amount = Apply_Discount(subtotal)
     
+    # 4. Apply Taxes (Reads from YAML)
+    grand_total, tax_amount, tax_rate = Apply_Taxes(discounted_total)
+    
+    # 5. Calculate Profit
+    profit, total_order_cost = Calculate_Profit(final_cart, subtotal, discount_amount)
+
+    # output the BILL for managment and for client
     
 
 
 
-def calculate_profit():
-    # profit is total - cost price     
-    print()
+
 
 def Process1():
     #place Holder

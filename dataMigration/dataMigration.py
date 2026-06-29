@@ -87,7 +87,7 @@ def migrate_all_invoices():
     print(f"\n📂 Found {len(excel_files)} invoice file(s). Starting migration pipeline...\n")
 
     # ── 3. Connect to DB ─────────────────────────────────────────────────────
-    db_path = os.path.abspath(os.path.join(script_dir, '..', 'MasterDB.db'))
+    db_path = os.path.abspath(os.path.join(script_dir, '..','main', 'MasterDB.db'))
     print(f"🔌 Connecting to database at: {db_path}")
     try:
         conn = sqlite3.connect(db_path)
@@ -212,11 +212,7 @@ def migrate_all_invoices():
                     prod_name      = str(row['اسم الصنف']) if 'اسم الصنف' in df.columns else f"Product {prod_id}"
                     print(f"  ⚠️  prod_id {prod_id} not in catalog — using invoice fallback.")
 
-                cursor.execute('''
-                    INSERT OR IGNORE INTO Products
-                    (product_id, item_name, description, Retail_Price, Wholesale_Price, stock_quantity, cost)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (prod_id, prod_name, '', true_retail, true_wholesale, 0, true_cost))
+
 
                 items.append((prod_id, qty, price, true_cost))
 

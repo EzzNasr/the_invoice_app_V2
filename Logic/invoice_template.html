@@ -16,6 +16,8 @@
        allow_toggle      - bool
        table_rows        - list of dicts: id, name, qty, unit_price, line_total
        subtotal, tax, grand_total, profit - str, formatted with currency
+       discount_pct      - float, e.g. 15.0  (0 means no discount)
+       discount_amount   - str, formatted with currency e.g. "EGP150.00"
        logo_uri, signature_uri            - Base64 data strings
      ================================================================= */
 
@@ -103,12 +105,12 @@
   }
 
   .header-left .business-name {
-    font-size: 0.75rem;
+    font-size: 1.5rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-muted);
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
   }
 
   .header-left .title {
@@ -120,8 +122,8 @@
   }
 
   .logo-container img {
-    max-height: 80px;
-    max-width: 120px;
+    max-height: 300px;
+    max-width: 270px;
     object-fit: contain;
   }
 
@@ -279,6 +281,27 @@
     color: var(--accent-gold);
   }
 
+  /* Discount rows */
+  .totals-block .row.discount-pct {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .totals-block .row.discount-pct span:last-child {
+    color: #c0392b;
+  }
+
+  .totals-block .row.discount-amount {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding-top: 2px;
+  }
+
+  .totals-block .row.discount-amount span:last-child {
+    color: #c0392b;
+    font-weight: 600;
+  }
+
   /* --- Footer --- */
   .footer {
     display: flex;
@@ -293,7 +316,7 @@
     color: var(--text-muted);
     line-height: 1.5;
   }
-
+Authorised Signature
   .signature {
     text-align: center;
     width: 200px;
@@ -313,7 +336,7 @@
   }
 
   .signature .sig-text {
-    font-size: 0.65rem;
+    font-size: 0.9rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-muted);
@@ -430,6 +453,18 @@
             <span>Subtotal</span>
             <span>{{ subtotal }}</span>
           </div>
+
+          {% if discount_pct > 0 %}
+          <div class="row discount-pct" id="discount-pct-row">
+            <span>Discount ({{ "%.1f"|format(discount_pct) }}%)</span>
+            <span>&minus;{{ discount_amount }}</span>
+          </div>
+          <div class="row discount-amount" id="discount-amount-row">
+            <span>After Discount</span>
+            <span>{{ after_discount }}</span>
+          </div>
+          {% endif %}
+
           <div class="row">
             <span>Tax</span>
             <span>{{ tax }}</span>
@@ -452,7 +487,8 @@
       <!-- Footer -->
       <div class="footer">
         <div class="footer-msg">
-          Thank you for your business. This document was generated automatically &mdash; please retain it for your records.
+          Thank you for your business. This document was generated automatically &mdash; please retain it for your records
+          yours EzzNasr.
         </div>
         <div class="signature">
           {% if signature_uri %}

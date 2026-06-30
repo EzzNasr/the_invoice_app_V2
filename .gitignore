@@ -116,6 +116,7 @@ client/public/__manus__/version.json
 *.xlsx
 *.pdf
 *.csv
+*.pyc
 invoices
 old_code
 MASTER_PROJECT_DOC.md
@@ -123,3 +124,4 @@ MASTER_PROJECT_DOC.pdf
 PROGRESS_AND_FEASIBILITY.md
 logo.png
 signature.png
+__pycache__/

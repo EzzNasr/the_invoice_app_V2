@@ -2,11 +2,12 @@ import sqlite3
 import os
 from tabulate import tabulate
 
-# ── Path constants (mirrors Logic/functions.py) ───────────────────────────────
+
+
+# directories 
 _LOGIC_DIR    = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_LOGIC_DIR)
 DB_PATH       = os.path.join(_PROJECT_ROOT, "main", "MasterDB.db")
-# ─────────────────────────────────────────────────────────────────────────────
 
 
 def PrintALL(table):
@@ -38,18 +39,18 @@ def ViewTable(table):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
-    # sanatize the table name 
+    # sanatize the table name to be able to make each table presentation 
     clean_table = str(table).strip().lower()
 
     try:
-        # We pass the original 'table' string to SQLite since it already knows what to do
+        # We pass the original 'table' string to SQLite since it already works
         c.execute(f"SELECT * FROM {table}")
     except sqlite3.OperationalError:
-        print(f"❌ Table '{table}' does not exist in the database at {db_path}")
+        print(f"❌ Table '{table}' does not exist in the database at {DB_PATH}")
         conn.close()
         return
 
-    # Now we compare against our sanitized, lowercase string!
+    # Now we compare against our sanitized, lowercase string
     if clean_table == "products":
         headers = ["Prod ID", "Item Name", "Description", "Retail Price", "Wholesale", "Stock", "Cost"]
         
@@ -82,7 +83,8 @@ def ViewTable(table):
         print(f"{'Inv #':<6} | {'Cust ID':<8} | {'Date':<20} | {'Subtotal':<10} | {'Discount':<10} | {'Total':<10} | {'Profit':<10} | {'Status':<8}")
         print("-" * 115)
         for row in c.fetchall():
-        # Applying the .2f formatter to force exact decimal precision on all financial columns
+
+        # Applying the .2f format to make all financial columns look presentable 
             print(f"{row[0]:<6} | {row[1]:<8} | {str(row[2]):<20} | {float(row[3]):<10.2f} | {float(row[4]):<10.2f} | {float(row[5]):<10.2f} | {float(row[6]):<10.2f} | {str(row[7]):<8}")
         print("-" * 115 + "\n")
         
@@ -95,22 +97,24 @@ def ViewTable(table):
         print("-" * 50 + "\n")
         
     else:
-        print(f"⚠️ I see the table, but I don't have headers designed for: '{table}'")
+        print(f"table is seen , but no headers designed for: '{table}'")
 
     conn.close()
 
 def ClearTable(table):
+    #table clear but still exists 
     conn = sqlite3.connect(DB_PATH)
     c= conn.cursor()
     c.execute(f"DELETE FROM {table}")
     conn.commit()
-    print(f"✅ Cleared all records from {table}.")   
+    print(f" Cleared all records from {table}.")   
 
 
 def DropTable(table):
+    # fully evaporate table 
     conn = sqlite3.connect(DB_PATH)
     c= conn.cursor()
     c.execute(f"DROP TABLE IF EXISTS {table}")
     conn.commit()
-    print(f"✅ Dropped table {table}.")
+    print(f" Dropped table {table}.")
 

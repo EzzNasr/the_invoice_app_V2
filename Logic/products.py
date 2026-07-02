@@ -54,6 +54,7 @@ def Validate_Products_pure(cursor, product_ids):
             raise HTTPException(status_code=404, detail=f"Product ID {p_id} does not exist.")
     return found_products
 
+
 def update_product_pure(cursor, conn, product_id, **fields):
     """Partial update. Accepts any of: item_name, retail_price, wholesale_price,
     cost, stock_quantity. Only keys actually passed are updated — this lets the

@@ -63,7 +63,7 @@ def ViewTable(table):
                 row[2], 
                 f"{float(row[3]):.2f}",  # Retail Price
                 f"{float(row[4]):.2f}",  # Wholesale
-                row[5],                  # Stock
+                row[5] if row[5] is not None else "—",  # Stock (untracked)
                 f"{float(row[6]):.2f}"   # Cost
             ])
         

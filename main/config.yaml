@@ -2,3 +2,5 @@
 tax_settings:
   apply_tax: false
   tax_rate: 0.14  # e.g. 0.14 = 14%
+stock_settings:
+  track_stock: true

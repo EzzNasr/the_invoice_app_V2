@@ -203,8 +203,8 @@ export default function StockManagement() {
               <th className="py-3 px-4">ID</th>
               <th className="py-3 px-4">Name</th>
               <th className="py-3 px-4">Retail</th>
-              <th className="py-3 px-4">Wholesale</th>
-              <th className="py-3 px-4">Cost</th>
+              <th className="py-3 px-7">Wholesale</th>
+              <th className="py-3 px-10">Cost</th>
               <th className="py-3 px-4">Stock</th>
               <th className="py-3 px-4 text-right">Actions</th>
             </tr>

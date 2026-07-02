@@ -55,8 +55,8 @@ df = df.rename(columns={
 # item_name = description (no separate name column in the source)
 df['item_name'] = df['description']
 
-# quantity is fully NaN in source — default to 0
-df['stock_quantity'] = df['stock_quantity'].fillna(0).astype(int)
+# quantity is fully NaN in source — leave as NULL (untracked), not 0 (zero stock)
+df['stock_quantity'] = df['stock_quantity'].astype('Int64')  # nullable pandas int, preserves NaN as pd.NA
 
 # Ensure numeric types are clean
 df['Retail_Price']    = pd.to_numeric(df['Retail_Price'],    errors='coerce').fillna(0.0)
@@ -97,8 +97,9 @@ con.commit()
 
 
 # ── Insert ────────────────────────────────────────────────────────────────────
-rows = list(migration_df.itertuples(index=False, name=None))
 
+# Convert pd.NA to standard Python None so SQLite can bind it as NULL
+rows = list(migration_df.replace({pd.NA: None}).itertuples(index=False, name=None))
 cur.executemany(
     '''INSERT OR REPLACE INTO Products
        (Product_ID, item_name, description, Retail_Price, Wholesale_Price, stock_quantity, Cost)

@@ -122,7 +122,13 @@ old_code
 MASTER_PROJECT_DOC.md
 MASTER_PROJECT_DOC.pdf
 PROGRESS_AND_FEASIBILITY.md
+
+instructions for backend and front end integration/
 logo.png
 signature.png
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
 functions.cpython-314.pyc

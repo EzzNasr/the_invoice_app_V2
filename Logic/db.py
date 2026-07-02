@@ -67,3 +67,13 @@ def set_tax_config(apply_tax: bool, tax_rate: float = None):
     with open(CONFIG_PATH, "w") as f:
         f.write(config_block)
     return apply_tax, final_rate
+
+def get_stock_config():
+    """Reads config.yaml, returns track_stock: bool. Defaults to False if unreadable/missing."""
+    try:
+        with open(CONFIG_PATH, "r") as f:
+            cfg = yaml.safe_load(f) or {}
+        ss = cfg.get("stock_settings", {})
+        return bool(ss.get("track_stock", False))
+    except Exception:
+        return False

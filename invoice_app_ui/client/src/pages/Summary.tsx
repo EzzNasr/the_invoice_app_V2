@@ -2,12 +2,20 @@ import { useState } from "react";
 import { FileText, CheckCircle2, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
 import { useInvoice } from "../contexts/InvoiceContext";
 
+interface StockWarning {
+  product_id: number;
+  item_name: string;
+  stock_quantity: number;
+}
+
 export default function Summary() {
   const { customerId, customerName, tierChoice, quantityType, cart } = useInvoice();
 
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [invoicePaths, setInvoicePaths] = useState<{ html?: string; pdf?: string } | null>(null);
+  const [stockWarnings, setStockWarnings] = useState<StockWarning[]>([]);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [billType, setBillType] = useState("mock");
   const [discount, setDiscount] = useState("");
@@ -17,9 +25,11 @@ export default function Summary() {
   const handleGenerate = async () => {
     setStatus("loading");
     setErrorMessage("");
+    setStockWarnings([]);
+    setSuccessMessage("");
 
     try {
-     
+
       if (billType === "return") {
         const response = await fetch("http://localhost:8000/return-invoice", {
           method: "POST",
@@ -29,12 +39,15 @@ export default function Summary() {
         const data = await response.json();
         if (response.ok) {
           setInvoicePaths(null);
+          // FIX: backend's message (e.g. "Stock restored." vs not, based on
+          // track_stock) was being fetched but never shown to the user.
+          setSuccessMessage(data.message ?? "Invoice cancelled.");
           setStatus("success");
         } else {
           setErrorMessage(JSON.stringify(data.detail));
           setStatus("error");
         }
-        return; 
+        return;
       }
 
       // mock or actual
@@ -56,6 +69,10 @@ export default function Summary() {
       const data = await response.json();
       if (response.ok) {
         setInvoicePaths({ html: data.html_path, pdf: data.management_pdf_path });
+        // Only populated for "actual" bills - mock bills never touch the DB,
+        // so there's nothing to warn about (nothing was decremented).
+        setStockWarnings(data.stock_warnings ?? []);
+        setSuccessMessage(data.message ?? "Success!");
         setStatus("success");
       } else {
         setErrorMessage(JSON.stringify(data.detail));
@@ -193,9 +210,31 @@ export default function Summary() {
                 <p className="font-bold">
                   {billType === "return" ? "Invoice Cancelled!" : "Success!"}
                 </p>
+                {/* FIX: backend's actual message (e.g. whether stock was restored)
+                    was fetched but previously discarded on the return path, and
+                    never shown at all on the mock/actual path. */}
+                {successMessage && (
+                  <p className="mt-1 opacity-90">{successMessage}</p>
+                )}
                 {invoicePaths?.html && (
                   <p className="break-all mt-1 opacity-90">{invoicePaths.html}</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {status === "success" && stockWarnings.length > 0 && (
+            <div className="bg-amber-500/10 text-amber-600 border border-amber-500/20 rounded-lg p-4 flex gap-3">
+              <AlertCircle className="flex-shrink-0 mt-0.5" size={20} />
+              <div className="text-sm">
+                <p className="font-bold">Stock is now insufficient</p>
+                <ul className="mt-1 space-y-0.5">
+                  {stockWarnings.map(w => (
+                    <li key={w.product_id}>
+                      {w.item_name} (ID {w.product_id}) — stock is now {w.stock_quantity}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           )}

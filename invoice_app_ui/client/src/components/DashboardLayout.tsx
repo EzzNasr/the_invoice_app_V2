@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-import { FileText, LayoutDashboard, ReceiptText } from "lucide-react";
+import { FileText, LayoutDashboard, ReceiptText, Boxes } from "lucide-react";
 
 interface OrderListItem {
   invoice_number: number | string;
@@ -25,10 +25,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (invoiceNumber) setLocation(`/orders/${invoiceNumber}`);
   };
 
+  
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 border-r bg-card flex flex-col p-4 gap-6">
+      <aside className="w-64 shrink-0 border-r bg-card flex flex-col p-4 gap-6 h-screen sticky top-0">
         <div className="text-lg font-bold px-2">Invoice App</div>
 
         <Link
@@ -58,7 +59,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Dashboard placeholder - not populated yet */}
-        <div className="mt-auto">
+        <div className="mt-auto space-y-1 pb-4">
+          <Link
+            href="/stock"
+            className="flex items-center gap-2 px-2 py-2 rounded-md text-sm font-medium hover:bg-muted"
+          >
+            <Boxes size={16} /> Stock Management
+          </Link>
           <Link
             href="/dashboard"
             className="flex items-center gap-2 px-2 py-2 rounded-md text-sm font-medium hover:bg-muted"

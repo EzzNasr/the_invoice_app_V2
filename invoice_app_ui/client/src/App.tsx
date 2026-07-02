@@ -11,6 +11,7 @@ import QuantityInput from "./pages/QuantityInput";
 import Summary from "./pages/Summary";
 import OrderViewer from "./pages/OrderViewer";
 import Dashboard from "./pages/Dashboard";
+import StockManagement from "./pages/StockManagement";
 import { InvoiceProvider } from "./contexts/InvoiceContext";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path={"/summary"} component={Summary} />
       <Route path={"/orders/:id"} component={OrderViewer} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/stock"} component={StockManagement} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

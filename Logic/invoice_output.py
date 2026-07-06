@@ -7,11 +7,10 @@ from jinja2 import Template
 from .db import TEMPLATE_PATH, INVOICES_DIR, ASSETS_DIR, get_tax_config
 
 
-# Asset helper function
+# ── Asset helpers ─────────────────────────────────────────────────────────────
+
 def _encode_asset(filename):
-
-    """Returns a Base64 data URI for an asset file. Returns empty string if missing."""
-
+    """Returns a Base64 data URI for an asset file. Returns '' if missing."""
     path = os.path.join(ASSETS_DIR, filename)
     if not os.path.exists(path):
         return ""
@@ -23,7 +22,8 @@ def _encode_asset(filename):
     return f"data:{mime};base64,{encoded}"
 
 
-# Path helpers Finders/ creators 
+# ── Path helpers ──────────────────────────────────────────────────────────────
+
 def _cx_folder(cx_name):
     """Returns .../invoices/<cx_name>/, creating it if needed."""
     safe_name = re.sub(r'[\\/:*?"<>|]', "_", cx_name).strip()
@@ -45,7 +45,7 @@ def _path_to_file_uri(path):
     return "file:///" + urllib.request.pathname2url(os.path.abspath(path)).lstrip("/")
 
 
-# PDF engine (Playwright) 
+# ── PDF engine (Playwright headless Chromium) ─────────────────────────────────
 
 def _html_to_pdf(html_path, pdf_path):
     from playwright.sync_api import sync_playwright
@@ -76,8 +76,6 @@ def _html_to_pdf(html_path, pdf_path):
 
 def Render_Invoice_HTML(invoice_packet, invoice_number, invoice_date,
                         business_name="NAVY LLC", mode="management"):
-    
-    #Note to self "make the bussiness name dynamic and can work through config "
     """Pure function — returns a rendered HTML string, no disk I/O."""
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
         template = Template(f.read())
@@ -216,7 +214,7 @@ def Save_Client_PDF(invoice_packet, invoice_slug, invoice_number, invoice_date,
 
 def invoice_Generation(invoice_packet, invoice_slug, invoice_date,
                        cx_name=None, business_name="NAVY LLC", mode="management"):
-    """ render then  save HTML then mgmt PDF +  client PDF then  open browser."""
+    """Orchestrates: render → save HTML + mgmt PDF → client PDF → open browser."""
     match = re.search(r'invoice#(.+?)(?:--|$)', invoice_slug)
     invoice_number_display = match.group(1) if match else invoice_slug
 
@@ -226,5 +224,5 @@ def invoice_Generation(invoice_packet, invoice_slug, invoice_date,
         invoice_packet, invoice_slug, invoice_number_display, invoice_date,
         cx_name=cx_name, business_name=business_name,
     )
-    print(f" Invoice saved and opened: {html_path}")
+    print(f"✅ Invoice saved and opened: {html_path}")
     return html_path, mgmt_pdf, client_pdf

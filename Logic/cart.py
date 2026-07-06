@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 
-# ── Pure functions (for FastAPI) ──────────────────────────────────────────────
+# Pure functions (for FastAPI) 
 
 def Bulk_system_pure(valid_products, tier, bulk_qty):
     final_order_details = []
@@ -39,7 +39,7 @@ def parse_discount_input(raw: str, subtotal: float) -> float:
     return (flat / subtotal * 100) if subtotal > 0 else 0.0
 
 
-# ── CLI versions ──────────────────────────────────────────────────────────────
+#  CLI versions 
 
 def Bulk_system(valid_products, tier):
     while True:

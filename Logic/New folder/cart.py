@@ -32,23 +32,11 @@ def Individual_system_pure(valid_products, tier, quantities: dict):
 
 
 def parse_discount_input(raw: str, subtotal: float) -> float:
-    """Returns a discount PERCENTAGE (0-100), always non-negative, always
-    capped so the resulting discount amount can never exceed the subtotal."""
     raw = (raw or "0").strip()
-    if raw.startswith("-"):
-        raise HTTPException(status_code=400, detail="Discount cannot be negative.")
     if raw.endswith("%"):
-        pct = float(raw[:-1] or 0)
-        if pct < 0:
-            raise HTTPException(status_code=400, detail="Discount percentage cannot be negative.")
-        return min(pct, 100.0)
+        return float(raw[:-1] or 0)
     flat = float(raw or 0)
-    if flat < 0:
-        raise HTTPException(status_code=400, detail="Discount amount cannot be negative.")
-    if subtotal <= 0:
-        return 0.0
-    flat = min(flat, subtotal)  # cap flat discount at the subtotal itself
-    return (flat / subtotal) * 100
+    return (flat / subtotal * 100) if subtotal > 0 else 0.0
 
 
 #  CLI versions 

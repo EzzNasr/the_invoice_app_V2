@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FileText, CheckCircle2, AlertCircle, Loader2, RefreshCcw } from "lucide-react";
-import { useInvoice } from "../contexts/InvoiceContext";
+import { useInvoice, clearInvoiceSession } from "../contexts/InvoiceContext";
+import InvoiceStepper from "../components/InvoiceStepper";
 
 interface StockWarning {
   product_id: number;
@@ -39,8 +40,6 @@ export default function Summary() {
         const data = await response.json();
         if (response.ok) {
           setInvoicePaths(null);
-          // FIX: backend's message (e.g. "Stock restored." vs not, based on
-          // track_stock) was being fetched but never shown to the user.
           setSuccessMessage(data.message ?? "Invoice cancelled.");
           setStatus("success");
         } else {
@@ -69,11 +68,14 @@ export default function Summary() {
       const data = await response.json();
       if (response.ok) {
         setInvoicePaths({ html: data.html_path, pdf: data.management_pdf_path });
-        // Only populated for "actual" bills - mock bills never touch the DB,
-        // so there's nothing to warn about (nothing was decremented).
         setStockWarnings(data.stock_warnings ?? []);
         setSuccessMessage(data.message ?? "Success!");
         setStatus("success");
+        // FIX: an "actual" bill commits to the DB and issues a real invoice
+        // number — carrying the same cart/customer into the next invoice
+        // would risk an accidental duplicate. Mock bills don't touch the DB,
+        // so their session is left alone.
+        if (billType === "actual") clearInvoiceSession();
       } else {
         setErrorMessage(JSON.stringify(data.detail));
         setStatus("error");
@@ -85,7 +87,9 @@ export default function Summary() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4">
+    <>
+      <InvoiceStepper />
+      <div className="max-w-5xl mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <FileText className="text-blue-500" /> Final Summary & Generation
@@ -210,9 +214,6 @@ export default function Summary() {
                 <p className="font-bold">
                   {billType === "return" ? "Invoice Cancelled!" : "Success!"}
                 </p>
-                {/* FIX: backend's actual message (e.g. whether stock was restored)
-                    was fetched but previously discarded on the return path, and
-                    never shown at all on the mock/actual path. */}
                 {successMessage && (
                   <p className="mt-1 opacity-90">{successMessage}</p>
                 )}
@@ -241,5 +242,6 @@ export default function Summary() {
         </div>
       </div>
     </div>
+    </>
   );
 }

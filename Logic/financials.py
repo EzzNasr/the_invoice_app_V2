@@ -1,7 +1,11 @@
 from .db import get_tax_config, set_tax_config
 
 
-# Pure calculation functions 
+# Pure calculation functions
+def fmt(value: float) -> str:
+    """EGP with comma thousands separator. e.g. 12450.5 → 'EGP 12,450.50'"""
+    return f"EGP {value:,.2f}"
+
 
 def Calculate_Subtotal(final_cart):
     """Sums index 3 (line price) from every cart item."""
@@ -41,7 +45,7 @@ def Package_Invoice_Data(cx_name, tier, final_cart, subtotal, discount_amount,
         p_id, qty, line_cost, line_total, p_name = item
         unit_price = line_total / qty
         gui_table_data.append(
-            [str(p_id), str(qty), f"EGP{unit_price:.2f}", f"EGP{line_total:.2f}", p_name]
+            [str(p_id), str(qty), fmt(unit_price), fmt(line_total), p_name]
         )
 
     after_discount_val = subtotal - discount_amount
@@ -53,16 +57,16 @@ def Package_Invoice_Data(cx_name, tier, final_cart, subtotal, discount_amount,
         },
         "table_data": gui_table_data,
         "financials": {
-            "subtotal":        f"EGP{subtotal:.2f}",
+            "subtotal":        fmt(subtotal),
             "discount_pct":    discount_pct,
-            "discount_amount": f"EGP{discount_amount:.2f}",
-            "after_discount":  f"EGP{after_discount_val:.2f}",
-            "discount":        f"-EGP{discount_amount:.2f}",
-            "tax":             f"+EGP{tax_amount:.2f}",
-            "grand_total":     f"EGP{grand_total:.2f}",
+            "discount_amount": fmt(discount_amount),
+            "after_discount":  fmt(after_discount_val),
+            "discount":        f"-EGP {discount_amount:,.2f}",
+            "tax":             f"+EGP {tax_amount:,.2f}",
+            "grand_total":     fmt(grand_total),
         },
         "system_metrics": {
-            "internal_profit": f"EGP{profit:.2f}",
+            "internal_profit": fmt(profit),
         },
     }
 
@@ -71,7 +75,7 @@ def Package_Invoice_Data(cx_name, tier, final_cart, subtotal, discount_amount,
 
 def Apply_Discount(subtotal):
     print(f"\n--- Discount Phase ---")
-    print(f"Current Subtotal: EGP{subtotal:.2f}")
+    print(f"Current Subtotal: {fmt(subtotal)}")
     while True:
         raw_disc = input("Enter discount (e.g., '10%', '50', or '0' to skip): ").strip()
         if not raw_disc or raw_disc == '0':

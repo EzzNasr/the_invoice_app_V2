@@ -23,6 +23,11 @@ interface OrderDetail {
   items: OrderItem[];
 }
 
+// FIX: comma-separated thousands + fixed 2 decimals, matching the backend's
+// fmt() currency formatting, so large totals read as "EGP 12,450.50".
+const fmtEGP = (val: number) =>
+  "EGP " + (val ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export default function OrderViewer() {
   const { id } = useParams();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -70,18 +75,18 @@ export default function OrderViewer() {
               <tr key={idx} className="border-b last:border-0">
                 <td className="py-2">{it.name}</td>
                 <td className="py-2">{it.qty}</td>
-                <td className="py-2 text-right">{it.unit_price.toFixed(2)}</td>
-                <td className="py-2 text-right">{it.line_total.toFixed(2)}</td>
+                <td className="py-2 text-right">{fmtEGP(it.unit_price)}</td>
+                <td className="py-2 text-right">{fmtEGP(it.line_total)}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
         <div className="border-t pt-4 space-y-1 text-sm ml-auto max-w-xs">
-          <div className="flex justify-between"><span>Subtotal</span><span>{order.subtotal.toFixed(2)}</span></div>
-          <div className="flex justify-between"><span>Discount</span><span>-{order.discount.toFixed(2)}</span></div>
-          <div className="flex justify-between font-bold text-base border-t pt-2"><span>Total</span><span>{order.total.toFixed(2)}</span></div>
-          <div className="flex justify-between text-amber-600"><span>Profit</span><span>{order.profit.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span>Subtotal</span><span>{fmtEGP(order.subtotal)}</span></div>
+          <div className="flex justify-between"><span>Discount</span><span>-{fmtEGP(order.discount)}</span></div>
+          <div className="flex justify-between font-bold text-base border-t pt-2"><span>Total</span><span>{fmtEGP(order.total)}</span></div>
+          <div className="flex justify-between text-amber-600"><span>Profit</span><span>{fmtEGP(order.profit)}</span></div>
         </div>
       </div>
     </div>

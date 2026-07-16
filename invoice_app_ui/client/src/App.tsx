@@ -13,6 +13,9 @@ import OrderViewer from "./pages/OrderViewer";
 import Dashboard from "./pages/Dashboard";
 import StockManagement from "./pages/StockManagement";
 import { InvoiceProvider } from "./contexts/InvoiceContext";
+import BrandingFooter from "./components/BrandingFooter";
+
+
 
 function Router() {
   return (
@@ -32,6 +35,8 @@ function Router() {
   );
 }
 
+
+
 function App() {
   return (
     <ErrorBoundary>
@@ -42,6 +47,7 @@ function App() {
             <DashboardLayout>
               <Router />
             </DashboardLayout>
+            <BrandingFooter />
           </TooltipProvider>
         </InvoiceProvider>
       </ThemeProvider>

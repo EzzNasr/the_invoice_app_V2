@@ -9,6 +9,11 @@ interface Stats {
   total_profit: number;
 }
 
+// FIX: comma-separated thousands + fixed 2 decimals, so large totals read
+// as "EGP 12,450.50" instead of "12450.50".
+const fmtEGP = (val: number) =>
+  "EGP " + (val ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export default function Dashboard() {
 const [stats, setStats] = useState<Stats>({
   top_items: [],
@@ -48,7 +53,7 @@ const [stats, setStats] = useState<Stats>({
 
       <div className="bg-card border rounded-xl p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-2">Profit Made So Far</h2>
-        <p className="text-3xl font-bold text-amber-600">{(stats.total_profit ?? 0).toFixed(2)}</p>
+        <p className="text-3xl font-bold text-amber-600">{fmtEGP(stats.total_profit)}</p>
       </div>
 
       <div className="bg-card border rounded-xl p-6 shadow-sm">
@@ -75,7 +80,7 @@ const [stats, setStats] = useState<Stats>({
             {stats.top_bills.map(b => (
               <div key={b.invoice_number} className="flex justify-between text-sm py-1 border-b last:border-0">
                 <span>Invoice #{b.invoice_number} — {b.cx_name}</span>
-                <span className="font-semibold text-amber-600">{(b.profit ?? 0).toFixed(2)}</span>
+                <span className="font-semibold text-amber-600">{fmtEGP(b.profit)}</span>
               </div>
             ))}
             {stats.top_bills.length === 0 && <p className="text-muted-foreground text-sm italic">No data yet.</p>}
@@ -90,7 +95,7 @@ const [stats, setStats] = useState<Stats>({
             {stats.top_customers.map((cust, idx) => (
               <div key={idx} className="flex justify-between text-sm py-1 border-b last:border-0">
                 <span>{cust.name}</span>
-                <span className="font-semibold text-amber-600">{(cust.profit ?? 0).toFixed(2)}</span>
+                <span className="font-semibold text-amber-600">{fmtEGP(cust.profit)}</span>
               </div>
             ))}
             {stats.top_customers.length === 0 && <p className="text-muted-foreground text-sm italic">No data yet.</p>}

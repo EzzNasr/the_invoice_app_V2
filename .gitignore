@@ -129,3 +129,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 functions.cpython-314.pyc
+ignore/

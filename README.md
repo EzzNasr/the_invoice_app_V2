@@ -43,21 +43,32 @@ That's the whole setup. Everything below this point is for people who want to re
 | **Two invoice documents per sale** — a management copy (with profit) and a client copy where profit is never rendered, not just hidden | ![Invoice Preview](screenshots/invoice-preview.png) |
 | **Full stock management** — inline-editable product table; leave stock blank for products you don't track at all, distinct from actually having zero | ![Stock Management](screenshots/stock-management.png) |
 | **Dashboard** — total profit, top sellers, most profitable bills and customers, computed live | ![Dashboard](screenshots/dashboard.png) |
-| **Order history with soft cancellation** — cancelled orders are never deleted, just zeroed out of profit totals, so the record stays intact | ![Order Viewer](screenshots/order-viewer.png) | ![Order Viewer2](screenshots/order-viewer2.png) |
+| **Order history with soft cancellation** — cancelled orders are never deleted, just zeroed out of profit totals, so the record stays intact | ![Order Viewer](screenshots/order-viewer.png)<br>![Order Viewer 2](screenshots/order-viewer2.png) |
 
 ---
 
 ## Architecture
 
-![overall - Bill Types & Overview](Docs/flowchart-Overall.png)
+<p align="center">
+  <img src="Docs/flowchart-Overall.png" alt="Overview — Bill Type Routing" width="100%">
+</p>
+<p align="center"><sub><b>Overview</b> — routes every bill by type (mock, actual, returned) to the process that handles it.</sub></p>
 
-![Process 1 - Bill Type & Overview](Docs/flowchart-process1.png)
+<p align="center">
+  <img src="Docs/flowchart-process1.png" alt="Process 1 — Pricing & Cart" width="100%">
+</p>
+<p align="center"><sub><b>Process 1*</b> — customer resolution, price tier selection, cart building, discount/tax/profit calculation.</sub></p>
 
-![Process 2 - Pricing & Cart](Docs/flowchart-process2.png)
+<p align="center">
+  <img src="Docs/flowchart-process2.png" alt="Process 2 — Database Write & Document Generation" width="100%">
+</p>
+<p align="center"><sub><b>Process 2*</b> — commits the sale to the database (customer, order, line items, stock) and generates both invoice documents.</sub></p>
 
-![Process 3 - DB Write & Document Generation](Docs/flowchart-process3.png)
+<p align="center">
+  <img src="Docs/flowchart-process3.png" alt="Process 3 — Returns & Cancellation" width="100%">
+</p>
+<p align="center"><sub><b>Process 3*</b> — cancels an invoice, restores stock, and zeroes its profit contribution without ever deleting the record.</sub></p>
 
-<sub>Full logic flow — bill type selection, Process 1\* (pricing/cart), Process 2\* (DB write + document generation), Process 3\* (returns/cancellation).</sub>
 Every piece of business logic exists in two forms: a `_pure` version that FastAPI calls (takes an explicit DB connection, raises exceptions, no blocking input), and the original CLI version it was refactored from. Neither reimplements the other — they share the same underlying data layer.
 
 **[Database schema (Rev. 2, corrected) →](Docs/Database_Schema_v2.pdf)** &nbsp;·&nbsp; **[Full pipeline breakdown, text/Mermaid reference, and every endpoint →](Docs/architecture.md)**

@@ -1,9 +1,8 @@
 # Architecture Deep Dive
 
-> **Note:** The primary visuals for this project are the hand-designed flowchart (`docs/flowchart.png`) and database schema doc (`docs/Database_Schema_v2.pdf`), linked from the main README. The diagrams below are a secondary, text-searchable reference — useful for git-diffing schema changes or reading inline without an image viewer, but not the polished versions.
+> **Note:** The primary visuals for this project are the hand-designed flowchart (`Docs/flowchart.png`) and database schema doc (`Docs/Database_Schema_v2.pdf`), linked from the main README. The diagrams below are a secondary, text-searchable reference  for reading inline without an image viewer, but not the polished versions.
 >
-> **If `docs/flowchart.png` doesn't yet include Process 2\* and Process 3\* content**, see [`process_2_3_spec.md`](process_2_3_spec.md) for the exact steps to fill those sections in, written to match the existing diagram's visual language.
-
+> **I
 ## Database Schema
 
 ```mermaid

@@ -49,6 +49,7 @@ That's the whole setup. Everything below this point is for people who want to re
 
 ## Architecture
 
+![overall - Bill Types & Overview](Docs/flowchart-Overall.png)
 
 ![Process 1 - Bill Type & Overview](Docs/flowchart-process1.png)
 

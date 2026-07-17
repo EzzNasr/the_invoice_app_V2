@@ -1,417 +1,116 @@
-# Invoice App V2
+# The Invoice App V2
 
-A full-stack invoice and business management application built to replace spreadsheet-based workflows with a centralized, maintainable system.
+**A desktop invoicing, stock, and profit-tracking system — replaces per-customer Excel files with one tool. In real commercial use today.**
 
-Originally developed to solve a real business problem, the project evolved from a Python command-line application into a modern React + FastAPI application featuring a layered architecture, relational database design, PDF generation, inventory management, analytics, and configurable business rules.
+[![Download](https://img.shields.io/badge/Download-Windows%20.exe-blue?style=for-the-badge&logo=windows)](../../releases/latest)
+![Python](https://img.shields.io/badge/Python-FastAPI-3776AB?logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-Vite-3178C6?logo=typescript&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-DB-003B57?logo=sqlite&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
----
-
-# Demo
-
-*A short demonstration of the application will be added here.*
+**[⬇ Download for Windows — No Install Needed](../../releases/latest)** &nbsp;·&nbsp; **[For Developers ↓](#running-from-source)**
 
 ![Demo](screenshots/demo.gif)
+<sub>Full flow: pick a customer → add products → set quantities → generate — real invoice, real PDF, seconds later.</sub>
 
 ---
 
-# Features
+## Why This Exists
 
-## Invoice Management
+A real business was running every invoice through a hand-edited Excel file per customer — no history, no stock tracking, no way to answer "what did we sell most this month" without opening a dozen files. This app replaces that with one system: pick a customer, add products, get a priced, taxed, profit-calculated invoice as a PDF, with every sale recorded for good.
 
-- Generate invoices in seconds
-- Automatic subtotal, discount, tax, total, and profit calculations
-- Generate separate Client and Management invoices
-- Export invoices as PDF
-- Interactive HTML invoice preview
-- Historical invoice preservation
-- Invoice cancellation while preserving records
+It started as a Python CLI tool to validate the workflow with zero UI investment, then grew into the full FastAPI + React app here — the commit history tracks that whole progression, CLI to web app, in under two weeks.
 
 ---
 
-## Customer Management
+## Quick Start (No Setup Required)
 
-- Customer database
-- Automatic customer lookup
-- Retail and wholesale pricing tiers
-- Create new customers during checkout
-- Customer order history
+1. Download the latest `.exe` from [**Releases**](../../releases/latest).
+2. Double-click it. No Python, no Node.js, no dependencies to install.
+3. Your data lives locally in a SQLite file — nothing leaves your machine.
 
----
-
-## Inventory Management
-
-- Product database
-- Retail, wholesale, and cost tracking
-- Optional inventory tracking
-- Automatic stock updates
-- Automatic inventory restoration after invoice cancellation
+That's the whole setup. Everything below this point is for people who want to read or modify the code.
 
 ---
 
-## Dashboard & Analytics
+## What It Does
 
-The integrated dashboard provides business insights directly from the database.
-
-- Top 5 best-selling products
-- Top 3 most profitable invoices
-- Top 3 most profitable customers
-- Order history
-- Invoice lookup
-- Business performance overview
-
----
-
-## Configuration
-
-Business rules are configurable through `config.yaml`.
-
-Examples include:
-
-- Tax rate
-- Inventory tracking
-- Business information
-- Payment information
-- PDF generation settings
-
-No source code changes are required to modify these settings.
+| Feature | Screenshot |
+|---|---|
+| **Guided invoice creation** — pick or create a customer, add products by ID, set quantities in bulk or individually, review, generate | ![Customer Selection](screenshots/customer-selection.png) |
+| **Live stock-aware warnings** — selling more than you have in stock shows a warning, never blocks the sale (real businesses sell before the count updates) | ![Quantity Input](screenshots/quantity-input.png) |
+| **Two invoice documents per sale** — a management copy (with profit) and a client copy where profit is never rendered, not just hidden | ![Invoice Preview](screenshots/invoice-preview.png) |
+| **Full stock management** — inline-editable product table; leave stock blank for products you don't track at all, distinct from actually having zero | ![Stock Management](screenshots/stock-management.png) |
+| **Dashboard** — total profit, top sellers, most profitable bills and customers, computed live | ![Dashboard](screenshots/dashboard.png) |
+| **Order history with soft cancellation** — cancelled orders are never deleted, just zeroed out of profit totals, so the record stays intact | ![Order Viewer](screenshots/order-viewer.png) |
 
 ---
 
-# Screenshots
+## Architecture
 
-## Dashboard
+![Application Flowchart](docs/flowchart.png)
+<sub>Full logic flow — bill type selection, Process 1\* (pricing/cart), Process 2\* (DB write + document generation), Process 3\* (returns/cancellation).</sub>
 
-![Dashboard](screenshots/dashboard.png)
+Every piece of business logic exists in two forms: a `_pure` version that FastAPI calls (takes an explicit DB connection, raises exceptions, no blocking input), and the original CLI version it was refactored from. Neither reimplements the other — they share the same underlying data layer.
 
----
-
-## Customer Selection
-
-![Customer Selection](screenshots/customer-selection.png)
+**[Database schema (Rev. 2, corrected) →](docs/Database_Schema_v2.pdf)** &nbsp;·&nbsp; **[Full pipeline breakdown, text/Mermaid reference, and every endpoint →](docs/architecture.md)**
 
 ---
 
-## Product Selection
+## Interesting Engineering Decisions
 
-![Product Selection](screenshots/product-selection.png)
+**NULL vs. zero stock.** Early on, "0 units in stock" and "we don't track this product's stock" were indistinguishable — both were just `0`. Now `stock_quantity` is `NULL` for untracked products and `0` for genuinely empty. Every warning, dashboard stat, and low-stock check reads this distinction, and the frontend's stock table shows untracked fields as blank, not zero.
 
----
+**Soft failures over hard blocks.** Overselling triggers a warning, not a rejection — real sales sometimes get entered before stock counts catch up, and stopping an employee mid-sale over a data-entry race condition is worse than letting them proceed with eyes open.
 
-## Quantity Input
+**Client PDFs never contain profit — structurally, not visually.** The client-facing invoice is a separate server-side render where the profit row is wrapped in a template conditional, not hidden with CSS. There's no version of the client PDF where profit exists in the file at all.
 
-![Quantity Input](screenshots/quantity-input.png)
+**Soft cancellation.** Returned/cancelled invoices are never deleted. The order stays in the database permanently, with its profit zeroed out of every dashboard total — the historical record is preserved even when the sale itself is reversed.
 
----
-
-## Invoice Summary
-
-![Invoice Summary](screenshots/summary.png)
+**Migrating real historical invoices, not just the price catalog.** The data-migration script doesn't just import products — it ingests old per-customer Excel invoice files and determines whether each one was a retail or wholesale sale by comparing recorded line values against both price tiers across the first several rows and taking whichever tier matches more often. No stored "invoice type" field existed in the old files; this recovers it after the fact.
 
 ---
 
-## Generated Invoice
+## Known Limitations / Roadmap
 
-![Generated Invoice](screenshots/invoice-preview.png)
-
----
-
-## Order History
-
-![Order History](screenshots/order-history.png)
+- **No authentication.** Fine for the current single-machine desktop use case; flagged for whenever a multi-user or hosted version happens.
+- **No automated tests yet.** Test tooling is in place (`pytest`, `ruff`); a real suite is next.
+- **Web-based returns don't yet generate the "RETURNED" banner document** the original CLI flow produces — currently just a confirmation message in the browser.
+- **Route paths aren't yet prefixed** for eventual same-origin deployment alongside the frontend — a small, already-scoped fix.
 
 ---
 
-# Tech Stack
+## Running From Source
 
-## Frontend
+For anyone who wants to read, modify, or build the app themselves rather than just run the `.exe`.
 
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-- shadcn/ui
-- Wouter
-
-## Backend
-
-- Python
-- FastAPI
-- SQLite
-- Jinja2
-- pdfkit
-- wkhtmltopdf
-
----
-
-# Architecture
-
-```
-                   React + TypeScript
-                           │
-                    HTTP REST API
-                           │
-                           ▼
-                    FastAPI Backend
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
- Business Logic      Financial Engine   PDF Generator
-        │
-        ▼
-     SQLite Database
-```
-
-The application follows a layered architecture where the presentation layer, API, business logic, and persistence are kept separate. This makes the project easier to maintain, test, and extend.
-
----
-
-# Application Flow
-
-The following diagram summarizes the application's workflow.
-
-![Application Flow](docs/flowchart.png)
-
----
-
-# Database Schema
-
-The application uses a normalized relational SQLite database consisting of four interconnected tables.
-
-- Products
-- Customers
-- Orders
-- OrderDetails
-
-![Database Schema](docs/database-schema.png)
-
-One important design decision was storing the exact selling price (`Price_Sold`) for every invoice line instead of referencing the current product price. This preserves historical invoices even if prices change in the future.
-
----
-
-# Design Decisions
-
-## Historical Invoice Integrity
-
-Each order stores the exact selling price at the moment of purchase. Historical invoices therefore remain accurate even after future price updates.
-
----
-
-## Layered Architecture
-
-Business logic is separated from the FastAPI endpoints, allowing the backend logic to remain reusable and independent of the user interface.
-
----
-
-## Configurable Business Rules
-
-Tax rate, inventory tracking, business information, and PDF settings are loaded from YAML instead of being hardcoded.
-
----
-
-## Soft Invoice Cancellation
-
-Invoices are never deleted.
-
-Cancelling an invoice:
-
-- Restores inventory
-- Removes its contribution to profit calculations
-- Preserves invoice numbering
-- Maintains complete historical records
-
----
-
-# Invoice Generation Pipeline
-
-Whenever an invoice is generated, the backend performs the following operations:
-
-1. Validate customer information
-2. Validate selected products
-3. Build the shopping cart
-4. Calculate subtotal
-5. Apply discounts
-6. Apply taxes
-7. Calculate profit
-8. Store the invoice in SQLite
-9. Update inventory (optional)
-10. Render the HTML invoice
-11. Generate the Management PDF
-12. Generate the Client PDF
-
----
-
-# Project Structure
-
-```text
-the_invoice_app_V2/
-│
-├── Logic/
-│   ├── fastapi_app.py
-│   ├── functions.py
-│   ├── products.py
-│   ├── customers.py
-│   ├── process.py
-│   ├── financials.py
-│   ├── Tables.py
-│   ├── db.py
-│   └── invoice_template.html
-│
-├── invoice_app_ui/
-│
-├── main/
-│   ├── MasterDB.db
-│   └── config.yaml
-│
-├── docs/
-│   ├── flowchart.png
-│   └── database-schema.png
-│
-├── screenshots/
-│
-├── Invoices/
-│
-├── requirements.txt
-│
-└── README.md
-```
-
----
-
-# Getting Started
-
-## Clone the Repository
-
+**Backend**
 ```bash
-git clone https://github.com/<your_username>/Invoice_App_V2.git
-
-cd Invoice_App_V2
+pip install -r requirments.txt
+cd main
+python main.py
 ```
 
----
-
-## Backend Setup
-
-Create a virtual environment:
-
-```bash
-python -m venv .venv
-```
-
-Activate it (Windows):
-
-```bash
-.venv\Scripts\activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the FastAPI server:
-
-```bash
-uvicorn Logic.fastapi_app:app --reload
-```
-
----
-
-## Frontend Setup
-
+**Frontend**
 ```bash
 cd invoice_app_ui
-
 npm install
-
 npm run dev
 ```
 
----
-
-# Future Improvements
-
-## Business Features
-
-- Store credit support
-- Customer balance tracking
-- Refunds and credit application to future invoices
-- Subscription ("pay-as-you-go") model
+The frontend expects the backend running on `localhost:8000`.
 
 ---
 
-## Analytics
+## Tech Stack
 
-- Revenue trends
-- Monthly sales reports
-- Product performance over time
-- Exportable analytics
-
----
-
-## Deployment
-
-- Docker support
-- PostgreSQL support
-- Cloud deployment
-- Automatic backups
+- **Backend:** Python, FastAPI, SQLite (stdlib `sqlite3`, no ORM), Jinja2, Playwright (headless Chromium for PDF generation), PyYAML
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui, wouter, recharts
+- **Packaging:** PyInstaller (standalone Windows executable, no runtime dependencies)
 
 ---
 
-## Security
+## License
 
-- User authentication
-- Role-based permissions
-- Multi-user support
-- Audit logging
-
----
-
-# Project Goals
-
-This project was built with four primary goals:
-
-- Replace spreadsheet-based invoice management with a centralized system.
-- Automate financial calculations while maintaining historical accuracy.
-- Separate presentation, business logic, and persistence into independent layers.
-- Demonstrate modern full-stack software engineering practices through a real-world application.
-
----
-
-# Skills Demonstrated
-
-- Full-stack application development
-- REST API development
-- React
-- TypeScript
-- FastAPI
-- Python
-- SQL database design
-- SQLite
-- Business logic architecture
-- Financial calculations
-- Inventory management
-- State management
-- PDF generation
-- Template rendering
-- Configuration management
-- Software architecture
-- Software refactoring
-- Real-world problem solving
-
----
-
-# Contact
-
-If you have any questions, suggestions, or would like to collaborate, feel free to reach out.
-
-**Email:** EzzNasrOne@gmail.com
-
----
-
-# License
-
-This project is licensed under the MIT License.
-
-Feel free to use, modify, and distribute the project under the terms of the license.
+MIT — see [LICENSE](LICENSE).

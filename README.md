@@ -51,11 +51,11 @@ That's the whole setup. Everything below this point is for people who want to re
 
 ## Architecture
 
-![Process 1 - Bill Type & Overview](docs/flowchart-process1.svg)
+![Process 1 - Bill Type & Overview](docs/flowchart-process1.png)
 
-![Process 2 - Pricing & Cart](docs/flowchart-process2.svg)
+![Process 2 - Pricing & Cart](docs/flowchart-process2.png)
 
-![Process 3 - DB Write & Document Generation](docs/flowchart-process3.svg)
+![Process 3 - DB Write & Document Generation](docs/flowchart-process3.png)
 
 <sub>Full logic flow — bill type selection, Process 1\* (pricing/cart), Process 2\* (DB write + document generation), Process 3\* (returns/cancellation).</sub>
 Every piece of business logic exists in two forms: a `_pure` version that FastAPI calls (takes an explicit DB connection, raises exceptions, no blocking input), and the original CLI version it was refactored from. Neither reimplements the other — they share the same underlying data layer.

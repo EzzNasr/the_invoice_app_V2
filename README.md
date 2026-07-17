@@ -43,7 +43,7 @@ That's the whole setup. Everything below this point is for people who want to re
 | **Two invoice documents per sale** — a management copy (with profit) and a client copy where profit is never rendered, not just hidden | ![Invoice Preview](screenshots/invoice-preview.png) |
 | **Full stock management** — inline-editable product table; leave stock blank for products you don't track at all, distinct from actually having zero | ![Stock Management](screenshots/stock-management.png) |
 | **Dashboard** — total profit, top sellers, most profitable bills and customers, computed live | ![Dashboard](screenshots/dashboard.png) |
-| **Order history with soft cancellation** — cancelled orders are never deleted, just zeroed out of profit totals, so the record stays intact | ![Order Viewer](screenshots/order-viewer.png) |
+| **Order history with soft cancellation** — cancelled orders are never deleted, just zeroed out of profit totals, so the record stays intact | ![Order Viewer](screenshots/order-viewer.png) | ![Order Viewer2](screenshots/order-viewer2.png) |
 
 ---
 

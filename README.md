@@ -82,8 +82,6 @@ Every piece of business logic exists in two forms: a `_pure` version that FastAP
 
 - **No authentication.** Fine for the current single-machine desktop use case; flagged for whenever a multi-user or hosted version happens.
 - **No automated tests yet.** Test tooling is in place (`pytest`, `ruff`); a real suite is next.
-- **Web-based returns don't yet generate the "RETURNED" banner document** the original CLI flow produces — currently just a confirmation message in the browser.
-- **Route paths aren't yet prefixed** for eventual same-origin deployment alongside the frontend — a small, already-scoped fix.
 
 ---
 

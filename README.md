@@ -49,7 +49,6 @@ That's the whole setup. Everything below this point is for people who want to re
 
 ## Architecture
 
-## Architecture
 
 ![Process 1 - Bill Type & Overview](docs/flowchart-process1.png)
 

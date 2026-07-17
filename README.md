@@ -29,6 +29,8 @@ It started as a Python CLI tool to validate the workflow with zero UI investment
 1. Download the latest `.exe` from [**Releases**](../../releases/latest).
 2. Double-click it. No Python, no Node.js, no dependencies to install.
 3. Your data lives locally in a SQLite file — nothing leaves your machine.
+4. when you unzip the file , you will find a folder "asstes" inside put your signature and company logo to be used instead of the current mock ones
+   make sure the names of your assets are as follows : signature = signature.png , logo = logo.png 
 
 That's the whole setup. Everything below this point is for people who want to read or modify the code.
 
